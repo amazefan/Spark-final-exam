@@ -7,7 +7,7 @@ Created on Mon May 14 21:15:40 2018
 
 import pyspark
 from pyspark import SparkContext
-
+from operator import add
 path_voice = r'E:\python.file\structure data\JDATA\voice_train.txt'
 path_uid = r'E:\python.file\structure data\JDATA\uid_train.txt'
 path_sms = r'E:\python.file\structure data\JDATA\sms_train.txt'
@@ -26,7 +26,14 @@ uiddata = uid.map(mode)
 smsdata = sms.map(mode)
 wadata = wa.map(mode)
 
-#RDD method to derivation
+#RDD method to derivate variable
+def flatten(Iterator):
+    for item in Iterator:
+        if isinstance(item,(list,tuple)):
+            for sub_item in flatten(item):
+                yield sub_item
+        else:yield item
+            
 funcmode1 = lambda x:(x[0],1)
 funcmode2 = lambda x,y:x+y
 call_type = {'LOCAL':1,'IN_PROVINCE':2,'BY_PROVINCE':3,'GAT':4,'INTERNATIONAL':5}
@@ -39,7 +46,16 @@ CALL_RDD_TIME = voicedata.map(lambda x:(x[0],int(x[5])-int(x[4]))).reduceByKey(f
 CALL_RDD_PERSON = voicedata.filter(lambda x:x[3]=='11').map(funcmode1).reduceByKey(funcmode2)
 CALL_RDD_BUSSINESS = voicedata.filter(lambda x:x[3]!='11').map(funcmode1).reduceByKey(funcmode2)
 CALL_RDD_HOWMANYPERSON = voicedata.filter(lambda x:x[3]=='11').map(lambda x:(x[0],x[1])).distinct().map(funcmode1).reduceByKey(funcmode2)
-
+CALL_RDD_HOWMANYBUSINESS = voicedata.filter(lambda x:x[3]!='11').map(lambda x:(x[0],x[1])).distinct().map(funcmode1).reduceByKey(funcmode2)
+CALL_RDD_AVGTIME = voicedata.map(lambda x:(x[0],(int(x[5])-int(x[4]),1))).reduceByKey(lambda x,y:(x[0]+y[0],x[1]+y[1])).map(lambda x:(x[0],x[1][0]/x[1][1]))
+CALL_RDD_DAYTIME = voicedata.filter(lambda x:int(x[4][2:4])>=7 and int(x[4][2:4])<=12).map(funcmode1).reduceByKey(funcmode2)
+CALL_RDD_AFTERNOON = voicedata.filter(lambda x:int(x[4][2:4])>=12 and int(x[4][2:4])<=18).map(funcmode1).reduceByKey(funcmode2)
+CALL_RDD_NIGHT = voicedata.filter(lambda x:int(x[4][2:4])>=18 and int(x[4][2:4])<=24).map(funcmode1).reduceByKey(funcmode2)
+CALL_RDD_BEFOREDAWN = voicedata.filter(lambda x:int(x[4][2:4])>=0 and int(x[4][2:4])<=7).map(funcmode1).reduceByKey(funcmode2)
+CALL_RDD_MAXTIME = voicedata.map(lambda x:(x[0],int(x[5])-int(x[4]))).reduceByKey(lambda x,y:max(x,y))
+CALL_RDD_MINTIME = voicedata.map(lambda x:(x[0],int(x[5])-int(x[4]))).reduceByKey(lambda x,y:min(x,y))
+CALL_RDD_TIMEVAR = voicedata.map(lambda x:(x[0],int(x[5])-int(x[4]))).join(CALL_RDD_AVGTIME).join(CALL_RDD_CNT).map(lambda x:(x[0],tuple(flatten(x[1])))).map(lambda x:(x[0],(x[1][0]-x[1][1])**2/x[1][2])).reduceByKey(funcmode2)
+CALL_RDD_INOUTRATIO = CALL_RDD_IN.join(CALL_RDD_CNT).map(lambda x:(x[0],x[1][0]/x[1][1]))
  
 #import sql module to convey data into dataframe
 #Dataframe is easy to sql
