@@ -26,12 +26,21 @@ uiddata = uid.map(mode)
 smsdata = sms.map(mode)
 wadata = wa.map(mode)
 
-takeOrdered(3, key=lambda x: -x)
+#RDD method to derivation
+funcmode1 = lambda x:(x[0],1)
+funcmode2 = lambda x,y:x+y
+call_type = {'LOCAL':1,'IN_PROVINCE':2,'BY_PROVINCE':3,'GAT':4,'INTERNATIONAL':5}
+for type_ in call_type:
+    exec("CALL_RDD_{} = voicedata.filter(lambda x:x[6]=='{}').map(funcmode1).reduceByKey(funcmode2)".format(type_,str(call_type[type_])))
+CALL_RDD_CNT = voicedata.map(funcmode1).reduceByKey(funcmode2)   
+CALL_RDD_IN = voicedata.filter(lambda x:x[7]=='1').map(funcmode1).reduceByKey(funcmode2)
+CALL_RDD_OUT = voicedata.filter(lambda x:x[7]=='0').map(funcmode1).reduceByKey(funcmode2)
+CALL_RDD_TIME = voicedata.map(lambda x:(x[0],int(x[5])-int(x[4]))).reduceByKey(funcmode2)
+CALL_RDD_PERSON = voicedata.filter(lambda x:x[3]=='11').map(funcmode1).reduceByKey(funcmode2)
+CALL_RDD_BUSSINESS = voicedata.filter(lambda x:x[3]!='11').map(funcmode1).reduceByKey(funcmode2)
+CALL_RDD_HOWMANYPERSON = voicedata.filter(lambda x:x[3]=='11').map(lambda x:(x[0],x[1])).distinct().map(funcmode1).reduceByKey(funcmode2)
 
-joineddata = uiddata.join(voicedata)
-joineddata = joineddata.join(smsdata)
-
-
+ 
 #import sql module to convey data into dataframe
 #Dataframe is easy to sql
 from pyspark.sql.types import *
@@ -54,16 +63,16 @@ schema = schema = StructType([
 voiceDF = spark.createDataFrame(voicedata,schema)
 voiceDF.registerTempTable("voice")
 
-#Variable Derivation(VOICE)
+#Variable Derivation(VOICE) on DF
 #def Derivation_call_type():
 call_type = {'LOCAL':1,'IN_PROVINCE':2,'BY_PROVINCE':3,'GAT':4,'INTERNATIONAL':5}
 for type_ in call_type:
-    sql_call = r" SELECT id,COUNT(id) FROM voice WHERE call_type= '{}' GROUP BY id".format(str(call_type[type_]))
+    sql_call = r" SELECT id,COUNT(id) AS call_{} FROM voice WHERE call_type= '{}' GROUP BY id".format(str(call_type[type_]),str(call_type[type_]))
     exec('CALL_{} = spark.sql("{}")'.format(type_,sql_call))
-CALL_CNT = spark.sql(" SELECT id,COUNT(id) FROM voice GROUP BY id")
-
-
-
+CALL_CNT = spark.sql(" SELECT id,COUNT(id) AS call_cnt FROM voice GROUP BY id")
+CALL_OUT = spark.sql(" SELECT id,COUNT(id) AS call_out FROM voice WHERE in_out = '0' GROUP BY id")
+CALL_IN = spark.sql(" SELECT id,COUNT(id) AS call_in FROM voice WHERE in_out = '1' GROUP BY id")
+CALL_TIME = spark.sql("SELECT id,SUM(time) as time from (SELECT id,CAST(end_time as int)-CAST(start_time as int) AS time FROM voice) GROUP BY id")
 
 
 
