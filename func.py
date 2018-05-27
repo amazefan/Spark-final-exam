@@ -41,15 +41,15 @@ def generate_head():
     liantong = ['130','131','132','145','155','156','166','171','175','176','185','186']
     yidong = ['134','135','136','137','138','139','147','150','151','152','157','158','159','178','182','183','184','187','188','198']
     return dianxin,liantong,yidong
-
-#dianxin,liantong,yidong = generate_head()  
+dianxin,liantong,yidong = generate_head()  
     
 def mean(Iterator):
     sums = 0
     cnt = len(Iterator)
     for item in Iterator:
         sums += item
-    return sums/cnt
+    return sums/(cnt+0.00001)
             
 funcmode1 = lambda x:(x[0],1)
 funcmode2 = lambda x,y:x+y
+funcmode3 = lambda x:(x[0],x[1]-1)

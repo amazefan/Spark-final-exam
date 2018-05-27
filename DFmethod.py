@@ -33,7 +33,7 @@ uiddata = uid.map(mode)
 smsdata = sms.map(mode)
 wadata = wa.map(mode)
 #StructType:a list of column names,the type of each column will be inferred from data.
-schema = schema = StructType([
+schema = StructType([
     StructField("id",StringType(),True),
     StructField("opp_num",StringType(),True),
     StructField("opp_head",StringType(),True),
