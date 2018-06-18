@@ -58,3 +58,15 @@ CALL_DF_CNT = spark.sql(" SELECT id,COUNT(id) AS call_cnt FROM voice GROUP BY id
 CALL_DF_OUT = spark.sql(" SELECT id,COUNT(id) AS call_out FROM voice WHERE in_out = '0' GROUP BY id")
 CALL_DF_IN = spark.sql(" SELECT id,COUNT(id) AS call_in FROM voice WHERE in_out = '1' GROUP BY id")
 CALL_DF_TIME = spark.sql("SELECT id,SUM(time) as time from (SELECT id,CAST(end_time as int)-CAST(start_time as int) AS time FROM voice) GROUP BY id")
+
+
+
+
+
+SMS_DF_TIME = 
+
+
+
+
+
+
