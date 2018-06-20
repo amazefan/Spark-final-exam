@@ -371,8 +371,13 @@ class TimeWindows(object):
         self.TIME_VAR = self.datapiece.map(lambda x:(x[0],time_diff(x[4],x[5]))). \
                    join(self.TIME_AVG).join(self.CNT). \
                    map(lambda x:(x[0],tuple(flatten(x[1])))). \
-                   map(lambda x:(x[0],(x[1][0]-x[1][1])**2/x[1][2])).reduceByKey(funcmode2) 
-                   
+                   map(lambda x:(x[0],(x[1][0]-x[1][1])**2/x[1][2])).reduceByKey(funcmode2)         
+        self.MAXTIME = self.datapiece.map(lambda x:(x[0],time_diff(x[4],x[5]))). \
+                               reduceByKey(lambda x,y:max(x,y))
+        self.MINTIME = self.datapiece.map(lambda x:(x[0],time_diff(x[4],x[5]))). \
+                               reduceByKey(lambda x,y:min(x,y))       
+        self.
+               
     def generateMore(self):
         pass       
  
