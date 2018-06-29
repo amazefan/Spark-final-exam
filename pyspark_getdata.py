@@ -219,6 +219,18 @@ CALL_RDD_DAYWITHCALLOUT = voicedata.filter(lambda x:x[7]=='0'). \
                           map(lambda x:(x[0],x[4][0:2])).distinct(). \
                           groupByKey().mapValues(list).mapValues(lambda x:len(x))
 
+from matplotlib import pyplot as plt
+call_rdd_daycount = voicedata.map(lambda x:(x[4][0:2],1)).reduceByKeyLocally(funcmode2)
+for i in range(1,46,7):
+    plt.title("周期性")
+    plt.xlabel("日")
+    plt.ylabel("记录条数")  
+    x = list(range(1,8))
+    y = [call_rdd_daycount[str(day).zfill(2)] for day in range(i,i+7)]
+    plt.plot(x,y,label="WEEK {}".format(i//7+1))
+    plt.legend(loc='lower left')
+
+
 CALL_RDD_JOIN = CALL_RDD_RECORD. \
                 fullOuterJoin(CALL_RDD_CNT). \
                 fullOuterJoin(CALL_RDD_IN). \
